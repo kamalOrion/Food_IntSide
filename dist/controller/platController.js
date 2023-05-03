@@ -5,17 +5,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deletePlat = exports.editPlat = exports.getOnePlat = exports.createPlat = exports.getAllPlatBycategorie = void 0;
 const platModel_js_1 = __importDefault(require("../models/platModel.js"));
+const express_validator_1 = require("express-validator");
+const customError_js_1 = require("../validation/customError.js");
 //URL: api/plat/:id      Remplacer :id par l'id de la categorie dont on veux recupérer la plats
 //TYPE: GET
 //REPONSE: json contenant tous les plats de ma categorie
 function getAllPlatBycategorie(req, res, next) {
     platModel_js_1.default.find({ categorie_id: req.params.id }).then((plats) => {
         res.status(200).json(plats);
-    }).catch((error) => {
-        res.status(400).json({
-            error: error
-        });
-    });
+    }).catch(error => next(error));
 }
 exports.getAllPlatBycategorie = getAllPlatBycategorie;
 //URL: api/plat
@@ -30,12 +28,15 @@ exports.getAllPlatBycategorie = getAllPlatBycategorie;
 //REPONSE: { "message": "Objet enregistré !" }
 //Fonction de creation
 function createPlat(req, res, next) {
+    const result = (0, express_validator_1.validationResult)(req);
+    if (!result.isEmpty())
+        next(new customError_js_1.CustomError(result.array()));
     console.log(req.body);
     const platObject = JSON.parse(req.body.plat);
     const plat = new platModel_js_1.default(Object.assign(Object.assign({}, platObject), { userId: req.auth.userId, imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}` }));
     plat.save()
         .then(() => { res.status(201).json({ message: 'Objet enregistré !' }); })
-        .catch((error) => { res.status(400).json({ error }); });
+        .catch(error => next(error));
 }
 exports.createPlat = createPlat;
 //URL: api/plat/one/:id
@@ -48,11 +49,7 @@ function getOnePlat(req, res, next) {
         _id: req.params.id
     }).then((plat) => {
         res.status(200).json(plat);
-    }).catch((error) => {
-        res.status(404).json({
-            error: error
-        });
-    });
+    }).catch(error => next(error));
 }
 exports.getOnePlat = getOnePlat;
 //URL: api/plat/:id      Remplacer :id par l'id du plats
@@ -67,22 +64,23 @@ exports.getOnePlat = getOnePlat;
 //REPONSE: { "message": "Objet modifié !" }
 //Fonction d'édition
 function editPlat(req, res, next) {
+    const result = (0, express_validator_1.validationResult)(req);
+    if (!result.isEmpty())
+        next(new customError_js_1.CustomError(result.array()));
     console.log("Edit");
     const platObject = req.file ? Object.assign(Object.assign({}, JSON.parse(req.body.plat)), { imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}` }) : Object.assign({}, req.body);
     platModel_js_1.default.findOne({ _id: req.params.id })
         .then((plat) => {
         if (plat.userId != req.auth.userId) {
-            res.status(401).json({ message: 'Not authorized' });
+            next(new Error('Non autorisé!'));
         }
         else {
             platModel_js_1.default.updateOne({ _id: req.params.id }, Object.assign(Object.assign({}, platObject), { _id: req.params.id }))
                 .then(() => res.status(200).json({ message: 'Objet modifié!' }))
-                .catch(error => res.status(401).json({ error }));
+                .catch(error => next(error));
         }
     })
-        .catch((error) => {
-        res.status(400).json({ error });
-    });
+        .catch(error => next(error));
 }
 exports.editPlat = editPlat;
 //URL: api/plat/:id
@@ -94,11 +92,7 @@ function deletePlat(req, res, next) {
         res.status(200).json({
             message: 'Supprimer !'
         });
-    }).catch((error) => {
-        res.status(400).json({
-            error: error
-        });
-    });
+    }).catch(error => next(error));
 }
 exports.deletePlat = deletePlat;
 //# sourceMappingURL=platController.js.map

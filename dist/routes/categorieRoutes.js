@@ -7,11 +7,12 @@ const express_1 = require("express");
 const auth_js_1 = __importDefault(require("../middleware/auth.js"));
 const multer_config_js_1 = __importDefault(require("../middleware/multer-config.js"));
 const categorieController_js_1 = require("../controller/categorieController.js");
+const validation_js_1 = require("../validation/validation.js");
 const router = (0, express_1.Router)();
 router.get('/', auth_js_1.default, categorieController_js_1.getAllCategorie);
-router.post('/', auth_js_1.default, multer_config_js_1.default, categorieController_js_1.createCategorie);
+router.post('/', auth_js_1.default, multer_config_js_1.default, validation_js_1.categorieValidation, categorieController_js_1.createCategorie);
 router.get('/:id', auth_js_1.default, categorieController_js_1.getOneCategorie);
-router.put('/:id', auth_js_1.default, multer_config_js_1.default, categorieController_js_1.editCategorie);
+router.put('/:id', auth_js_1.default, multer_config_js_1.default, validation_js_1.categorieValidation, categorieController_js_1.editCategorie);
 router.delete('/:id', auth_js_1.default, categorieController_js_1.deleteCategorie);
 exports.default = router;
 //# sourceMappingURL=categorieRoutes.js.map

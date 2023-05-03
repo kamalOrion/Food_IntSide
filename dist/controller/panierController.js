@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deletePanier = exports.deleteOnPlatPanier = exports.addtoPanier = exports.getClientPanier = void 0;
 const panierModel_js_1 = __importDefault(require("../models/panierModel.js"));
 const platModel_js_1 = __importDefault(require("../models/platModel.js"));
+const express_validator_1 = require("express-validator");
+const customError_js_1 = require("../validation/customError.js");
 //URL: api/panier/:id
 //TYPE: GET
 function getClientPanier(req, res, next) {
@@ -35,11 +37,7 @@ function getClientPanier(req, res, next) {
             .catch((err) => {
             console.log(err);
         });
-    }).catch((error) => {
-        res.status(400).json({
-            error: error
-        });
-    });
+    }).catch(error => next(error));
 }
 exports.getClientPanier = getClientPanier;
 //URL: api/panier
@@ -51,6 +49,9 @@ exports.getClientPanier = getClientPanier;
 //REPONSE: { "message": "Objet enregistré !" }
 //Fonction de creation
 function addtoPanier(req, res, next) {
+    const result = (0, express_validator_1.validationResult)(req);
+    if (!result.isEmpty())
+        next(new customError_js_1.CustomError(result.array()));
     console.log('AddToPanier', req.body);
     platModel_js_1.default.findOne({ _id: req.body.platId }).then(Plat => {
         const panier = new panierModel_js_1.default({
@@ -60,7 +61,7 @@ function addtoPanier(req, res, next) {
         panier.save();
     })
         .then(() => { res.status(201).json({ message: 'Objet enregistré !' }); })
-        .catch(error => { res.status(400).json({ error }); });
+        .catch(error => next(error));
 }
 exports.addtoPanier = addtoPanier;
 //URL: api/panier/:id      Remplacer :id par l'id de l'élément du panier
@@ -75,11 +76,7 @@ function deleteOnPlatPanier(req, res, next) {
         res.status(200).json({
             message: 'Supprimer !'
         });
-    }).catch((error) => {
-        res.status(400).json({
-            error: error
-        });
-    });
+    }).catch(error => next(error));
 }
 exports.deleteOnPlatPanier = deleteOnPlatPanier;
 //URL: api/panier/:id          Remplacer :id par l'id du client
@@ -94,11 +91,7 @@ function deletePanier(req, res, next) {
         res.status(200).json({
             message: 'Deleted!'
         });
-    }).catch((error) => {
-        res.status(400).json({
-            error: error
-        });
-    });
+    }).catch(error => next(error));
 }
 exports.deletePanier = deletePanier;
 //# sourceMappingURL=panierController.js.map

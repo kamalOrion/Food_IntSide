@@ -1,6 +1,8 @@
 import Panier from '../models/panierModel.js';
 import Plat from '../models/platModel.js';
 import { Request, Response, NextFunction } from 'express';
+import { validationResult } from 'express-validator';
+import { CustomError } from '../validation/customError.js'
 
 //URL: api/panier/:id
 //TYPE: GET
@@ -22,7 +24,6 @@ export function getClientPanier(req: Request, res: Response, next: NextFunction)
     }
   ])
   .then((infoPanier) => {
-
     Panier.find({ clientId: req.body.clientId })
     .populate('plat') // remplace l'ID de plat par l'objet correspondant dans la collection "Plat"
     .then((paniers) => {
@@ -34,13 +35,7 @@ export function getClientPanier(req: Request, res: Response, next: NextFunction)
       console.log(err);
     });
     
-  }).catch(
-    (error) => {
-      res.status(400).json({
-        error: error
-      });
-    }
-  );
+  }).catch( error => next(error) );
 }
 
 //URL: api/panier
@@ -53,6 +48,8 @@ export function getClientPanier(req: Request, res: Response, next: NextFunction)
 
 //Fonction de creation
 export function addtoPanier(req: Request, res: Response, next: NextFunction) {
+  const result = validationResult(req);  
+  if (!result.isEmpty()) next( new CustomError(result.array()) );
   console.log('AddToPanier', req.body)
   Plat.findOne({ _id: req.body.platId }).then( Plat => {
       const panier = new Panier({
@@ -62,7 +59,7 @@ export function addtoPanier(req: Request, res: Response, next: NextFunction) {
       panier.save()
     })
   .then(() => { res.status(201).json({message: 'Objet enregistré !'})})
-  .catch(error => { res.status(400).json( { error })})
+  .catch( error => next(error) )
 }
 
 //URL: api/panier/:id      Remplacer :id par l'id de l'élément du panier
@@ -80,13 +77,7 @@ export function deleteOnPlatPanier(req: Request, res: Response, next: NextFuncti
         message: 'Supprimer !'
       });
     }
-  ).catch(
-    (error) => {
-      res.status(400).json({
-        error: error
-      });
-    }
-  );
+  ).catch( error => next(error) );
 }
 
 //URL: api/panier/:id          Remplacer :id par l'id du client
@@ -104,13 +95,7 @@ export function deletePanier(req: Request, res: Response, next: NextFunction) {
         message: 'Deleted!'
       });
     }
-  ).catch(
-    (error) => {
-      res.status(400).json({
-        error: error
-      });
-    }
-  );
+  ).catch( error => next(error) );
 }
 
 export interface PanierData{

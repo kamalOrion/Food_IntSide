@@ -31,5 +31,9 @@ app.use('/api/categorie', categorieRoutes_js_1.default);
 app.use('/api/plat', platRoutes_js_1.default);
 app.use('/api/panier', panierRoutes_js_1.default);
 app.use('/api/reservation', reservationRoutes_js_1.default);
+app.use((err, req, res, next) => {
+    console.log(err.stack);
+    res.status(500).json(err.data ? err.data : err.message);
+});
 exports.default = app;
 //# sourceMappingURL=app.js.map

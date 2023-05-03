@@ -6,6 +6,7 @@ import categorieRoutes from './routes/categorieRoutes.js';
 import platRoutes from './routes/platRoutes.js';
 import reservationRoutes from './routes/reservationRoutes.js';
 import panierRoutes from './routes/panierRoutes.js';
+import { CustomError } from './validation/customError.js'
 
 // connect('mongodb+srv://kamal:65Kamal43@cluster0.biunged.mongodb.net/?retryWrites=true&w=majority',
 
@@ -34,5 +35,10 @@ app.use('/api/categorie', categorieRoutes);
 app.use('/api/plat', platRoutes);
 app.use('/api/panier', panierRoutes);
 app.use('/api/reservation', reservationRoutes);
+
+app.use((err: CustomError, req: Request, res: Response, next: NextFunction) => {
+  console.log(err.stack);
+  res.status(500).json(err.data ? err.data : err.message);
+});
 
 export default app;

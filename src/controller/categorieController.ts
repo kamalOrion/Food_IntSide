@@ -1,6 +1,8 @@
 import Categorie from '../models/categorieModel.js';
 import { Request, Response, NextFunction } from 'express';
 import RequestContract from './contratcts/RequestContract.js';
+import { validationResult } from 'express-validator';
+import { CustomError } from '../validation/customError.js'
 
 //URL: api/categorie/
 //TYPE: GET
@@ -8,17 +10,11 @@ import RequestContract from './contratcts/RequestContract.js';
 
 export function getAllCategorie(req: Request, res: Response, next: NextFunction) {
   console.log('getAll')
-    Categorie.find().then(
-      (categories) => {
-        res.status(200).json(categories);
-      }
-    ).catch(
-      (error) => {
-        res.status(400).json({
-          error: error
-        });
-      }
-    );
+  Categorie.find().then(
+    (categories) => {
+      res.status(200).json(categories);
+    }
+  ).catch( error => next(error) );
 }
 
 //URL: api/categorie/
@@ -33,7 +29,8 @@ export function getAllCategorie(req: Request, res: Response, next: NextFunction)
 
 //Fonction de creation
 export function createCategorie(req: RequestContract, res: Response, next: NextFunction) {
-  console.log('Create', req.body)
+  const result = validationResult(req);  
+  if (!result.isEmpty()) next( new CustomError(result.array()) );
   const categorieObject = JSON.parse(req.body.categorie);
   const categorie = new Categorie({
       ...categorieObject,
@@ -43,7 +40,7 @@ export function createCategorie(req: RequestContract, res: Response, next: NextF
 
   categorie.save()
   .then(() => { res.status(201).json({message: 'Objet enregistré !'})})
-  .catch((error: Error) => { res.status(400).json({ error })})
+  .catch( error => next(error) )
 }
 
 //URL: api/categorie/:id      Remplacer :id par l'id de la categorie
@@ -59,13 +56,7 @@ export function getOneCategorie(req: RequestContract, res: Response, next: NextF
         (Categorie) => {
           res.status(200).json(Categorie);
         }
-      ).catch(
-        (error) => {
-          res.status(404).json({
-            error: error
-          });
-        }
-    );
+      ).catch( error => next(error) );
 }
 
 //URL: api/categorie/:id      Remplacer :id par l'id de la categorie
@@ -79,7 +70,8 @@ export function getOneCategorie(req: RequestContract, res: Response, next: NextF
 //REPONSE: { "message": "Objet modifié !" }
 
   export function editCategorie(req: RequestContract, res: Response, next: NextFunction) {
-    console.log("Edit")
+    const result = validationResult(req);  
+    if (!result.isEmpty()) next( new CustomError(result.array()) );
     const categorieObject = req.file ? {
         ...JSON.parse(req.body.categorie),
         imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
@@ -89,16 +81,15 @@ export function getOneCategorie(req: RequestContract, res: Response, next: NextF
         .then((categorie) => {
           console.log(categorie)
             if (categorie.userId !=  req.auth.userId) {
-                res.status(401).json({ message : 'Not authorized'});
+                next(new Error('Non autorisé'))
+                //res.status(401).json({ message : 'Not authorized'});
             } else {
                 Categorie.updateOne({ _id: req.params.id}, { ...categorieObject, _id: req.params.id})
                 .then(() => res.status(200).json({message : 'Objet modifié!'}))
-                .catch(error => res.status(401).json({ error }));
+                .catch( error => next(error) );
             }
         })
-        .catch((error) => {
-            res.status(400).json({ error });
-        });
+        .catch( error => next(error) );
  }
 
 //URL: api/categorie/:id      Remplacer :id par l'id de la categorie
@@ -106,7 +97,7 @@ export function getOneCategorie(req: RequestContract, res: Response, next: NextF
 //REPONSE: { "message": "Supprimer !" }
 
   //Fonction de suppression
-  export function   deleteCategorie(req: Request, res: Response, next: NextFunction) {
+  export function deleteCategorie(req: Request, res: Response, next: NextFunction) {
     console.log('Delete')
     Categorie.deleteOne({_id: req.params.id}).then(
       () => {
@@ -114,11 +105,5 @@ export function getOneCategorie(req: RequestContract, res: Response, next: NextF
           message: 'Supprimer!'
         });
       }
-    ).catch(
-      (error) => {
-        res.status(400).json({
-          error: error
-        });
-      }
-    );
+    ).catch( error => next(error) );
   }

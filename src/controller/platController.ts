@@ -1,6 +1,8 @@
 import Plat from '../models/platModel.js';
 import { Request, Response, NextFunction } from 'express';
 import RequestContract from './contratcts/RequestContract.js';
+import { validationResult } from 'express-validator';
+import { CustomError } from '../validation/customError.js'
 
 //URL: api/plat/:id      Remplacer :id par l'id de la categorie dont on veux recupérer la plats
 //TYPE: GET
@@ -11,13 +13,7 @@ export function getAllPlatBycategorie(req: Request, res: Response, next: NextFun
       (plats) => {
         res.status(200).json(plats);
       }
-    ).catch(
-      (error) => {
-        res.status(400).json({
-          error: error
-        });
-      }
-    );
+    ).catch( error => next(error) );
 }
 
 //URL: api/plat
@@ -33,6 +29,8 @@ export function getAllPlatBycategorie(req: Request, res: Response, next: NextFun
 
 //Fonction de creation
 export function createPlat(req: RequestContract, res: Response, next: NextFunction) {
+  const result = validationResult(req);  
+  if (!result.isEmpty()) next( new CustomError(result.array()) );
   console.log(req.body)
   const platObject = JSON.parse(req.body.plat);
   const plat = new Plat({
@@ -43,7 +41,7 @@ export function createPlat(req: RequestContract, res: Response, next: NextFuncti
 
   plat.save()
   .then(() => { res.status(201).json({message: 'Objet enregistré !'})})
-  .catch((error: Error) => { res.status(400).json( { error })})
+  .catch( error => next(error) )
 }
 
 //URL: api/plat/one/:id
@@ -59,13 +57,7 @@ export function getOnePlat(req: Request, res: Response, next: NextFunction) {
         (plat) => {
           res.status(200).json(plat);
         }
-      ).catch(
-        (error) => {
-          res.status(404).json({
-            error: error
-          });
-        }
-    );
+      ).catch( error => next(error) );
 }
 
 //URL: api/plat/:id      Remplacer :id par l'id du plats
@@ -81,6 +73,8 @@ export function getOnePlat(req: Request, res: Response, next: NextFunction) {
 
 //Fonction d'édition
 export function editPlat(req: RequestContract, res: Response, next: NextFunction) {
+  const result = validationResult(req);  
+  if (!result.isEmpty()) next( new CustomError(result.array()) );
   console.log("Edit")
   const platObject = req.file ? {
       ...JSON.parse(req.body.plat),
@@ -90,16 +84,14 @@ export function editPlat(req: RequestContract, res: Response, next: NextFunction
   Plat.findOne({_id: req.params.id})
       .then((plat) => {
           if (plat.userId != req.auth.userId) {
-              res.status(401).json({ message : 'Not authorized'});
+              next(new Error('Non autorisé!'))
           } else {
               Plat.updateOne({ _id: req.params.id}, { ...platObject, _id: req.params.id})
               .then(() => res.status(200).json({message : 'Objet modifié!'}))
-              .catch(error => res.status(401).json({ error }));
+              .catch( error => next(error) );
           }
       })
-      .catch((error) => {
-          res.status(400).json({ error });
-      });
+      .catch( error => next(error) );
 }
 
 //URL: api/plat/:id
@@ -114,11 +106,5 @@ export function editPlat(req: RequestContract, res: Response, next: NextFunction
           message: 'Supprimer !'
         });
       }
-    ).catch(
-      (error) => {
-        res.status(400).json({
-          error: error
-        });
-      }
-    );
+    ).catch( error => next(error) );
   }

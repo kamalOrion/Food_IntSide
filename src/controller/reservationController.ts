@@ -1,6 +1,8 @@
 import Reservation from '../models/reservationModel.js';
 import Plat from '../models/platModel.js';
 import { Request, Response, NextFunction } from 'express';
+import { validationResult } from 'express-validator';
+import { CustomError } from '../validation/customError.js'
 
 //URL: api/reservation/
 //TYPE: GET
@@ -11,13 +13,7 @@ export function getAllReservation(req: Request, res: Response, next: NextFunctio
       (reservations) => {
         res.status(200).json(reservations);
       }
-    ).catch(
-      (error) => {
-        res.status(400).json({
-          error: error
-        });
-      }
-    );
+    ).catch( error => next(error) );
 }
 
 //URL: api/reservation
@@ -33,6 +29,8 @@ export function getAllReservation(req: Request, res: Response, next: NextFunctio
 
 //Fonction de creation
 export function createReservation(req: Request, res: Response, next: NextFunction) {
+  const result = validationResult(req);  
+  if (!result.isEmpty()) next( new CustomError(result.array()) );
   console.log('Create', req.body)
   Plat.findOne({
     _id: req.body.platId
@@ -49,7 +47,7 @@ export function createReservation(req: Request, res: Response, next: NextFunctio
     res.status(200).json({
         message : "Reservation enregistré avec succès"
     });
-  }).catch((error) => { res.status(404).json({ error: error }); });
+  }).catch( error => next(error) );
 }
 
  //URL: api/reservation/:id          Remplacer :id par l'id de la reservation
@@ -67,11 +65,5 @@ export function createReservation(req: Request, res: Response, next: NextFunctio
           message: 'Supprimer!'
         });
       }
-    ).catch(
-      (error) => {
-        res.status(400).json({
-          error: error
-        });
-      }
-    );
+    ).catch( error => next(error) );
   }

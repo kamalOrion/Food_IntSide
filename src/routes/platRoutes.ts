@@ -2,6 +2,7 @@ import { Router } from 'express';
 import auth from "../middleware/auth.js";
 import multer from '../middleware/multer-config.js';
 import { getAllPlatBycategorie, createPlat, getOnePlat, editPlat, deletePlat } from '../controller/platController.js';
+import { platValidation } from '../validation/validation.js'
 
 const router = Router();
 

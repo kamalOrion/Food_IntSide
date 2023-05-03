@@ -2,7 +2,8 @@ import User from '../models/userModel.js';
 import jsonwebtoken from 'jsonwebtoken';
 import { hash as _hash, compare } from 'bcrypt';
 import { Request, Response, NextFunction } from 'express';
-import RequestContract from './contratcts/RequestContract.js';
+import { validationResult } from 'express-validator';
+import { CustomError } from '../validation/customError.js'
 
 //URL : api/auth/signup
 //TYPE: POST
@@ -13,7 +14,8 @@ import RequestContract from './contratcts/RequestContract.js';
 //Success message: "Utilisateur créé"
 
 export function signup(req: Request, res: Response, next: NextFunction) {
-    console.log(req.body, "kamal")
+    const result = validationResult(req);  
+    if (!result.isEmpty()) next( new CustomError(result.array()) );
     _hash(req.body.password, 10)
       .then(hash => {
         const user = new User({
@@ -22,10 +24,10 @@ export function signup(req: Request, res: Response, next: NextFunction) {
           role: req.body.role || 'client'
         });
         user.save()
-          .then(() => res.status(201).json({ message: 'Utilisateur créé !' }))
-          .catch((error: Error) => res.status(400).json({ error }));
+        .then(() => res.status(201).json({ message: 'Utilisateur créé !' }))
+        .catch( error => next(error) );
       })
-      .catch((error: Error) => res.status(500).json({ error }));
+      .catch( error => next(error) );
   }
 
 //URL : api/auth/login
@@ -41,15 +43,17 @@ export function signup(req: Request, res: Response, next: NextFunction) {
 // }
 
   export function login(req: Request, res: Response, next: NextFunction) {
+    const result = validationResult(req);
+    if (!result.isEmpty()) next( new CustomError(result.array()) );
     User.findOne({ email: req.body.email })
         .then(user => {
             if (!user) {
-                return res.status(401).json({ error: 'Utilisateur non trouvé !' });
+              next(new Error('Utilisateur non trouvé !'));
             }
             compare(req.body.password, user.password)
                 .then(valid => {
                     if (!valid) {
-                        return res.status(401).json({ error: 'Mot de passe incorrect !' });
+                      next(new Error('Mot de passe incorrect !'));
                     }
                     res.status(200).json({
                         userId: user._id,
@@ -61,7 +65,7 @@ export function signup(req: Request, res: Response, next: NextFunction) {
                         )
                     });
                 })
-                .catch((error: Error) => res.status(500).json({ error }));
+                .catch( error => next(error) );
         })
-        .catch((error: Error) => res.status(500).json({ error }));
+        .catch( error => next(error) );
  }

@@ -6,17 +6,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteReservation = exports.createReservation = exports.getAllReservation = void 0;
 const reservationModel_js_1 = __importDefault(require("../models/reservationModel.js"));
 const platModel_js_1 = __importDefault(require("../models/platModel.js"));
+const express_validator_1 = require("express-validator");
+const customError_js_1 = require("../validation/customError.js");
 //URL: api/reservation/
 //TYPE: GET
 function getAllReservation(req, res, next) {
     console.log('getAll');
     reservationModel_js_1.default.find().then((reservations) => {
         res.status(200).json(reservations);
-    }).catch((error) => {
-        res.status(400).json({
-            error: error
-        });
-    });
+    }).catch(error => next(error));
 }
 exports.getAllReservation = getAllReservation;
 //URL: api/reservation
@@ -31,6 +29,9 @@ exports.getAllReservation = getAllReservation;
 //  }
 //Fonction de creation
 function createReservation(req, res, next) {
+    const result = (0, express_validator_1.validationResult)(req);
+    if (!result.isEmpty())
+        next(new customError_js_1.CustomError(result.array()));
     console.log('Create', req.body);
     platModel_js_1.default.findOne({
         _id: req.body.platId
@@ -45,7 +46,7 @@ function createReservation(req, res, next) {
         res.status(200).json({
             message: "Reservation enregistré avec succès"
         });
-    }).catch((error) => { res.status(404).json({ error: error }); });
+    }).catch(error => next(error));
 }
 exports.createReservation = createReservation;
 //URL: api/reservation/:id          Remplacer :id par l'id de la reservation
@@ -60,11 +61,7 @@ function deleteReservation(req, res, next) {
         res.status(200).json({
             message: 'Supprimer!'
         });
-    }).catch((error) => {
-        res.status(400).json({
-            error: error
-        });
-    });
+    }).catch(error => next(error));
 }
 exports.deleteReservation = deleteReservation;
 //# sourceMappingURL=reservationController.js.map

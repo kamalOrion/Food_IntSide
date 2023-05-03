@@ -7,6 +7,8 @@ exports.login = exports.signup = void 0;
 const userModel_js_1 = __importDefault(require("../models/userModel.js"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = require("bcrypt");
+const express_validator_1 = require("express-validator");
+const customError_js_1 = require("../validation/customError.js");
 //URL : api/auth/signup
 //TYPE: POST
 //DATA: {
@@ -15,7 +17,9 @@ const bcrypt_1 = require("bcrypt");
 // }
 //Success message: "Utilisateur créé"
 function signup(req, res, next) {
-    console.log(req.body, "kamal");
+    const result = (0, express_validator_1.validationResult)(req);
+    if (!result.isEmpty())
+        next(new customError_js_1.CustomError(result.array()));
     (0, bcrypt_1.hash)(req.body.password, 10)
         .then(hash => {
         const user = new userModel_js_1.default({
@@ -25,9 +29,9 @@ function signup(req, res, next) {
         });
         user.save()
             .then(() => res.status(201).json({ message: 'Utilisateur créé !' }))
-            .catch((error) => res.status(400).json({ error }));
+            .catch(error => next(error));
     })
-        .catch((error) => res.status(500).json({ error }));
+        .catch(error => next(error));
 }
 exports.signup = signup;
 //URL : api/auth/login
@@ -42,15 +46,18 @@ exports.signup = signup;
 //      token: token d'authentification 
 // }
 function login(req, res, next) {
+    const result = (0, express_validator_1.validationResult)(req);
+    if (!result.isEmpty())
+        next(new customError_js_1.CustomError(result.array()));
     userModel_js_1.default.findOne({ email: req.body.email })
         .then(user => {
         if (!user) {
-            return res.status(401).json({ error: 'Utilisateur non trouvé !' });
+            next(new Error('Utilisateur non trouvé !'));
         }
         (0, bcrypt_1.compare)(req.body.password, user.password)
             .then(valid => {
             if (!valid) {
-                return res.status(401).json({ error: 'Mot de passe incorrect !' });
+                next(new Error('Mot de passe incorrect !'));
             }
             res.status(200).json({
                 userId: user._id,
@@ -58,9 +65,9 @@ function login(req, res, next) {
                 token: jsonwebtoken_1.default.sign({ userId: user._id }, 'RANDOM_TOKEN_SECRET', { expiresIn: '24h' })
             });
         })
-            .catch((error) => res.status(500).json({ error }));
+            .catch(error => next(error));
     })
-        .catch((error) => res.status(500).json({ error }));
+        .catch(error => next(error));
 }
 exports.login = login;
 //# sourceMappingURL=userController.js.map

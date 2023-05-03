@@ -5,6 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteCategorie = exports.editCategorie = exports.getOneCategorie = exports.createCategorie = exports.getAllCategorie = void 0;
 const categorieModel_js_1 = __importDefault(require("../models/categorieModel.js"));
+const express_validator_1 = require("express-validator");
+const customError_js_1 = require("../validation/customError.js");
 //URL: api/categorie/
 //TYPE: GET
 //REPONSE: objet Json contenant la liste des catégories de plat enrégistré
@@ -12,11 +14,7 @@ function getAllCategorie(req, res, next) {
     console.log('getAll');
     categorieModel_js_1.default.find().then((categories) => {
         res.status(200).json(categories);
-    }).catch((error) => {
-        res.status(400).json({
-            error: error
-        });
-    });
+    }).catch(error => next(error));
 }
 exports.getAllCategorie = getAllCategorie;
 //URL: api/categorie/
@@ -30,12 +28,14 @@ exports.getAllCategorie = getAllCategorie;
 //REPONSE: { "message": "Objet enrégistré !" }
 //Fonction de creation
 function createCategorie(req, res, next) {
-    console.log('Create', req.body);
+    const result = (0, express_validator_1.validationResult)(req);
+    if (!result.isEmpty())
+        next(new customError_js_1.CustomError(result.array()));
     const categorieObject = JSON.parse(req.body.categorie);
     const categorie = new categorieModel_js_1.default(Object.assign(Object.assign({}, categorieObject), { userId: req.auth.userId, imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}` }));
     categorie.save()
         .then(() => { res.status(201).json({ message: 'Objet enregistré !' }); })
-        .catch((error) => { res.status(400).json({ error }); });
+        .catch(error => next(error));
 }
 exports.createCategorie = createCategorie;
 //URL: api/categorie/:id      Remplacer :id par l'id de la categorie
@@ -48,11 +48,7 @@ function getOneCategorie(req, res, next) {
         _id: req.params.id
     }).then((Categorie) => {
         res.status(200).json(Categorie);
-    }).catch((error) => {
-        res.status(404).json({
-            error: error
-        });
-    });
+    }).catch(error => next(error));
 }
 exports.getOneCategorie = getOneCategorie;
 //URL: api/categorie/:id      Remplacer :id par l'id de la categorie
@@ -65,23 +61,24 @@ exports.getOneCategorie = getOneCategorie;
 //} sinon un simple json conviendra : { "nom": "nom de la categorie" }
 //REPONSE: { "message": "Objet modifié !" }
 function editCategorie(req, res, next) {
-    console.log("Edit");
+    const result = (0, express_validator_1.validationResult)(req);
+    if (!result.isEmpty())
+        next(new customError_js_1.CustomError(result.array()));
     const categorieObject = req.file ? Object.assign(Object.assign({}, JSON.parse(req.body.categorie)), { imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}` }) : Object.assign({}, req.body);
     categorieModel_js_1.default.findOne({ _id: req.params.id })
         .then((categorie) => {
         console.log(categorie);
         if (categorie.userId != req.auth.userId) {
-            res.status(401).json({ message: 'Not authorized' });
+            next(new Error('Non autorisé'));
+            //res.status(401).json({ message : 'Not authorized'});
         }
         else {
             categorieModel_js_1.default.updateOne({ _id: req.params.id }, Object.assign(Object.assign({}, categorieObject), { _id: req.params.id }))
                 .then(() => res.status(200).json({ message: 'Objet modifié!' }))
-                .catch(error => res.status(401).json({ error }));
+                .catch(error => next(error));
         }
     })
-        .catch((error) => {
-        res.status(400).json({ error });
-    });
+        .catch(error => next(error));
 }
 exports.editCategorie = editCategorie;
 //URL: api/categorie/:id      Remplacer :id par l'id de la categorie
@@ -94,11 +91,7 @@ function deleteCategorie(req, res, next) {
         res.status(200).json({
             message: 'Supprimer!'
         });
-    }).catch((error) => {
-        res.status(400).json({
-            error: error
-        });
-    });
+    }).catch(error => next(error));
 }
 exports.deleteCategorie = deleteCategorie;
 //# sourceMappingURL=categorieController.js.map
