@@ -32,11 +32,13 @@ export function createPlat(req: RequestContract, res: Response, next: NextFuncti
   const result = validationResult(req);  
   if (!result.isEmpty()) next( new CustomError(result.array()) );
   console.log(req.body)
-  const platObject = JSON.parse(req.body.plat);
   const plat = new Plat({
-      ...platObject,
-      userId: req.auth.userId,
-      imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+    categorie_id: req.body.categorie_id,
+    nom: req.body.nom,
+    prix: req.body.prix,
+    description: req.body.description,
+    userId: req.auth.userId,
+    imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
   });
 
   plat.save()

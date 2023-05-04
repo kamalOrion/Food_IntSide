@@ -29,15 +29,14 @@ export function getAllCategorie(req: Request, res: Response, next: NextFunction)
 
 //Fonction de creation
 export function createCategorie(req: RequestContract, res: Response, next: NextFunction) {
+  console.log(req.body);
   const result = validationResult(req);  
   if (!result.isEmpty()) next( new CustomError(result.array()) );
-  const categorieObject = JSON.parse(req.body.categorie);
   const categorie = new Categorie({
-      ...categorieObject,
-      userId: req.auth.userId,
-      imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+    nom: req.body.nom,
+    userId: req.auth.userId,
+    imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
   });
-
   categorie.save()
   .then(() => { res.status(201).json({message: 'Objet enregistré !'})})
   .catch( error => next(error) )

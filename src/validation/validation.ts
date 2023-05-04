@@ -3,20 +3,14 @@ import { Request, Response, NextFunction } from 'express';
 import formidable, { Fields, Files } from 'formidable';
 import RequestContract from '../controller/contratcts/RequestContract';
 
-// const imageValidation = body('image').custom((value, { req }) => {
-//   console.log(req.body, 'ici la valeur')
-//   if (!req.files.image) {
-//     throw new Error('Aucun fichier n\'a été téléchargé.');
-//   }
-//   const file = req.files.image;
-//   if (!file.type.match(/^image/)) {
-//     throw new Error('Le fichier doit être une image.');
-//   }
-//   if (file.size > 1024 * 1024) {
-//     throw new Error('Le fichier ne doit pas dépasser 1 Mo.');
-//   }
-//   return true;
-// });
+const addFileToReqBody = (req: Request, res: Response, next: NextFunction) => {
+  console.log(req.body)
+  req.body.file = req.file ? true : false;
+  next();
+}
+
+const imageCategorieValidation = body('file').custom((value, { req }) => req.body.file );
+const imagePlatValidation = body('file').custom((value, { req }) => req.body.file );
 
 export const userValidation = [
     body('email')
@@ -28,12 +22,15 @@ export const userValidation = [
 ]
 
 export const categorieValidation = [
-  body('categorie')
+  addFileToReqBody,
+  body('nom')
     .notEmpty().withMessage("Le nom est obligatoire")
-    .isString().withMessage("Le nom doit être une chaine de caratère")
+    .isString().withMessage("Le nom doit être une chaine de caratère"),
+  imageCategorieValidation.withMessage("L'image de la catégorie est obligatoire")
 ]
 
 export const platValidation = [
+  addFileToReqBody,
   body('categorie_id')
     .notEmpty().withMessage("ID de la catégorie obligatoire")
     .isString().withMessage("Le nom doit être une chaine de caratère"),
@@ -45,7 +42,8 @@ export const platValidation = [
     .isString().withMessage("Le nom doit être une chaine de caratère"),
   body('description')
     .notEmpty().withMessage("La description est obligatoire")
-    .isString().withMessage("Le nom doit être une chaine de caratère")
+    .isString().withMessage("Le nom doit être une chaine de caratère"),
+  imagePlatValidation.withMessage("L'image du plat est obligatoire")
 ]
 
 export const panierValidation = [

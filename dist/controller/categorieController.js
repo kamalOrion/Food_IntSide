@@ -28,11 +28,15 @@ exports.getAllCategorie = getAllCategorie;
 //REPONSE: { "message": "Objet enrégistré !" }
 //Fonction de creation
 function createCategorie(req, res, next) {
+    console.log(req.body);
     const result = (0, express_validator_1.validationResult)(req);
     if (!result.isEmpty())
         next(new customError_js_1.CustomError(result.array()));
-    const categorieObject = JSON.parse(req.body.categorie);
-    const categorie = new categorieModel_js_1.default(Object.assign(Object.assign({}, categorieObject), { userId: req.auth.userId, imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}` }));
+    const categorie = new categorieModel_js_1.default({
+        nom: req.body.nom,
+        userId: req.auth.userId,
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+    });
     categorie.save()
         .then(() => { res.status(201).json({ message: 'Objet enregistré !' }); })
         .catch(error => next(error));

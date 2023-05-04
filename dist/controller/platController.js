@@ -32,8 +32,14 @@ function createPlat(req, res, next) {
     if (!result.isEmpty())
         next(new customError_js_1.CustomError(result.array()));
     console.log(req.body);
-    const platObject = JSON.parse(req.body.plat);
-    const plat = new platModel_js_1.default(Object.assign(Object.assign({}, platObject), { userId: req.auth.userId, imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}` }));
+    const plat = new platModel_js_1.default({
+        categorie_id: req.body.categorie_id,
+        nom: req.body.nom,
+        prix: req.body.prix,
+        description: req.body.description,
+        userId: req.auth.userId,
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+    });
     plat.save()
         .then(() => { res.status(201).json({ message: 'Objet enregistré !' }); })
         .catch(error => next(error));

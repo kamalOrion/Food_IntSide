@@ -2,20 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.reservationValidation = exports.panierValidation = exports.platValidation = exports.categorieValidation = exports.userValidation = void 0;
 const express_validator_1 = require("express-validator");
-// const imageValidation = body('image').custom((value, { req }) => {
-//   console.log(req.body, 'ici la valeur')
-//   if (!req.files.image) {
-//     throw new Error('Aucun fichier n\'a été téléchargé.');
-//   }
-//   const file = req.files.image;
-//   if (!file.type.match(/^image/)) {
-//     throw new Error('Le fichier doit être une image.');
-//   }
-//   if (file.size > 1024 * 1024) {
-//     throw new Error('Le fichier ne doit pas dépasser 1 Mo.');
-//   }
-//   return true;
-// });
+const addFileToReqBody = (req, res, next) => {
+    console.log(req.body);
+    req.body.file = req.file ? true : false;
+    next();
+};
+const imageCategorieValidation = (0, express_validator_1.body)('file').custom((value, { req }) => req.body.file);
+const imagePlatValidation = (0, express_validator_1.body)('file').custom((value, { req }) => req.body.file);
 exports.userValidation = [
     (0, express_validator_1.body)('email')
         .notEmpty().withMessage("L'email est obligatoire")
@@ -25,11 +18,14 @@ exports.userValidation = [
         .isLength({ min: 6 }).withMessage("Le mot de passe doit contenir au moins 6 caractères"),
 ];
 exports.categorieValidation = [
-    (0, express_validator_1.body)('categorie')
+    addFileToReqBody,
+    (0, express_validator_1.body)('nom')
         .notEmpty().withMessage("Le nom est obligatoire")
-        .isString().withMessage("Le nom doit être une chaine de caratère")
+        .isString().withMessage("Le nom doit être une chaine de caratère"),
+    imageCategorieValidation.withMessage("L'image de la catégorie est obligatoire")
 ];
 exports.platValidation = [
+    addFileToReqBody,
     (0, express_validator_1.body)('categorie_id')
         .notEmpty().withMessage("ID de la catégorie obligatoire")
         .isString().withMessage("Le nom doit être une chaine de caratère"),
@@ -41,7 +37,8 @@ exports.platValidation = [
         .isString().withMessage("Le nom doit être une chaine de caratère"),
     (0, express_validator_1.body)('description')
         .notEmpty().withMessage("La description est obligatoire")
-        .isString().withMessage("Le nom doit être une chaine de caratère")
+        .isString().withMessage("Le nom doit être une chaine de caratère"),
+    imagePlatValidation.withMessage("L'image du plat est obligatoire")
 ];
 exports.panierValidation = [
     (0, express_validator_1.body)('platId')
