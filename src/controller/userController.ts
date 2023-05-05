@@ -13,21 +13,23 @@ import { CustomError } from '../validation/customError.js'
 // }
 //Success message: "Utilisateur créé"
 
-export function signup(req: Request, res: Response, next: NextFunction) {
+export async function signup(req: Request, res: Response, next: NextFunction) {
     const result = validationResult(req);  
     if (!result.isEmpty()) next( new CustomError(result.array()) );
-    _hash(req.body.password, 10)
-      .then(hash => {
+    try {
+      const hash = await _hash(req.body.password, 10);
+      if(hash){
         const user = new User({
           email: req.body.email,
           password: hash,
           role: req.body.role || 'client'
         });
-        user.save()
-        .then(() => res.status(201).json({ message: 'Utilisateur créé !' }))
-        .catch( error => next(error) );
-      })
-      .catch( error => next(error) );
+        user.save();
+        res.status(201).json({ message: 'Utilisateur créé !' })
+      } else () => { throw new Error("Echèc de la création de l'utilisateur") };
+    } catch( error ){
+      next(error)
+    };
   }
 
 //URL : api/auth/login
@@ -42,30 +44,24 @@ export function signup(req: Request, res: Response, next: NextFunction) {
 //      token: token d'authentification 
 // }
 
-  export function login(req: Request, res: Response, next: NextFunction) {
+  export async function login(req: Request, res: Response, next: NextFunction) {
     const result = validationResult(req);
     if (!result.isEmpty()) next( new CustomError(result.array()) );
-    User.findOne({ email: req.body.email })
-        .then(user => {
-            if (!user) {
-              next(new Error('Utilisateur non trouvé !'));
-            }
-            compare(req.body.password, user.password)
-                .then(valid => {
-                    if (!valid) {
-                      next(new Error('Mot de passe incorrect !'));
-                    }
-                    res.status(200).json({
-                        userId: user._id,
-                        role: user.role,
-                        token: jsonwebtoken.sign(
-                            { userId: user._id },
-                            'RANDOM_TOKEN_SECRET',
-                            { expiresIn: '24h' }
-                        )
-                    });
-                })
-                .catch( error => next(error) );
-        })
-        .catch( error => next(error) );
+    try {
+      const user = await User.findOne({ email: req.body.email });
+      if (user) {
+        const valid = await compare(req.body.password, user.password);
+        valid ?  res.status(200).json({
+          userId: user._id,
+          role: user.role,
+          token: jsonwebtoken.sign(
+              { userId: user._id },
+              'RANDOM_TOKEN_SECRET',
+              { expiresIn: '24h' }
+          )
+        }) : () => { throw new Error('Mot de passe incorrect !') };
+      } else () => { throw new Error('Utilisateur inexistant !') };
+    } catch( error ){ 
+      next(error)
+    };
  }

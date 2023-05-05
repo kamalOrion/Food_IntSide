@@ -7,35 +7,31 @@ import { CustomError } from '../validation/customError.js'
 //URL: api/panier/:id
 //TYPE: GET
 
-export function getClientPanier(req: Request, res: Response, next: NextFunction) {
-  console.log('getClientPanier', req.body)
+export async function getClientPanier(req: Request, res: Response, next: NextFunction) {
   const data: PanierData = {
     infoPanier: null,
     panier: []
   }
-  Panier.aggregate([
-    { $match: { clientId: req.body.clientId } }, // Filtrez les enregistrements ayant la valeur 1 pour la clé "lol"
-    {
-      $group: {
-        _id: null,
-        total: { $sum: "$plat.prix" }, // Calcul de la somme des valeurs de la clé "prix"
-        count: { $sum: 1 } // Calcul du nombre total d'enregistrements respectant les conditions
+  try {
+    const infoPanier = await Panier.aggregate([
+      { $match: { clientId: req.body.clientId } }, 
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$plat.prix" },
+          count: { $sum: 1 } 
+        }
       }
-    }
-  ])
-  .then((infoPanier) => {
-    Panier.find({ clientId: req.body.clientId })
-    .populate('plat') // remplace l'ID de plat par l'objet correspondant dans la collection "Plat"
-    .then((paniers) => {
+    ]);
+    if(infoPanier){
+      const paniers = await Panier.find({ clientId: req.body.clientId }).populate('plat');
       data.infoPanier = infoPanier;
       data.panier = paniers;
       res.status(200).json(data);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-    
-  }).catch( error => next(error) );
+    } else () => { throw new Error("Echèc de la récupération du panier") };
+  } catch( error ){
+    next(error)
+  };
 }
 
 //URL: api/panier
@@ -47,19 +43,21 @@ export function getClientPanier(req: Request, res: Response, next: NextFunction)
 //REPONSE: { "message": "Objet enregistré !" }
 
 //Fonction de creation
-export function addtoPanier(req: Request, res: Response, next: NextFunction) {
+export async function addtoPanier(req: Request, res: Response, next: NextFunction) {
   const result = validationResult(req);  
   if (!result.isEmpty()) next( new CustomError(result.array()) );
-  console.log('AddToPanier', req.body)
-  Plat.findOne({ _id: req.body.platId }).then( Plat => {
+  try {
+    await Plat.findOne({ _id: req.body.platId }).then( Plat => {
       const panier = new Panier({
         plat: Plat,
         clientId: req.body.clientId
       });
       panier.save()
-    })
-  .then(() => { res.status(201).json({message: 'Objet enregistré !'})})
-  .catch( error => next(error) )
+    });
+    res.status(201).json({message: 'Objet enregistré !'})
+  } catch( error ){
+    next(error)
+  }
 }
 
 //URL: api/panier/:id      Remplacer :id par l'id de l'élément du panier
@@ -69,15 +67,15 @@ export function addtoPanier(req: Request, res: Response, next: NextFunction) {
 //}
 
 //Fonction de suppression
-export function deleteOnPlatPanier(req: Request, res: Response, next: NextFunction) {
-  console.log('deleteOnPlatPanier')
-  Panier.deleteOne({_id: req.params.id}).then(
-    () => {
-      res.status(200).json({
-        message: 'Supprimer !'
-      });
-    }
-  ).catch( error => next(error) );
+export async function deleteOnPlatPanier(req: Request, res: Response, next: NextFunction) {
+  try{
+    await Panier.deleteOne({_id: req.params.id});
+    res.status(200).json({
+      message: 'Supprimer !'
+    });
+  } catch( error ){
+    next(error)
+  };
 }
 
 //URL: api/panier/:id          Remplacer :id par l'id du client
@@ -87,15 +85,15 @@ export function deleteOnPlatPanier(req: Request, res: Response, next: NextFuncti
 //}
 
 //Fonction de suppression
-export function deletePanier(req: Request, res: Response, next: NextFunction) {
-  console.log('Delete')
-  Panier.deleteMany({clientId: req.params.id}).then(
-    () => {
-      res.status(200).json({
-        message: 'Deleted!'
-      });
-    }
-  ).catch( error => next(error) );
+export async function deletePanier(req: Request, res: Response, next: NextFunction) {
+  try {
+    await Panier.deleteMany({clientId: req.params.id});
+    res.status(200).json({
+      message: 'Deleted!'
+    });
+  } catch( error ){
+    next(error)
+  };
 }
 
 export interface PanierData{

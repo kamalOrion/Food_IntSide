@@ -7,13 +7,13 @@ import { CustomError } from '../validation/customError.js'
 //URL: api/reservation/
 //TYPE: GET
 
-export function getAllReservation(req: Request, res: Response, next: NextFunction) {
-  console.log('getAll')
-    Reservation.find().then(
-      (reservations) => {
-        res.status(200).json(reservations);
-      }
-    ).catch( error => next(error) );
+export async function getAllReservation(req: Request, res: Response, next: NextFunction) {
+  try {
+    const reservations = await Reservation.find();
+    reservations ? res.status(200).json(reservations) : () => { throw new Error('Echèc de la récupération des reservations') };
+  } catch( error ){
+    next(error) 
+  };
 }
 
 //URL: api/reservation
@@ -28,26 +28,24 @@ export function getAllReservation(req: Request, res: Response, next: NextFunctio
 //  }
 
 //Fonction de creation
-export function createReservation(req: Request, res: Response, next: NextFunction) {
+export async function createReservation(req: Request, res: Response, next: NextFunction) {
   const result = validationResult(req);  
   if (!result.isEmpty()) next( new CustomError(result.array()) );
-  console.log('Create', req.body)
-  Plat.findOne({
-    _id: req.body.platId
-  }).then(
-    (plat) => {
+
+  try{
+    const plat = await Plat.findOne({ _id: req.body.platId });
+    if(plat){
       const reservation = new Reservation({
         clientId: req.body.clientId,
         date: req.body.date,
         plat: plat
       });  
       reservation.save();
-    }
-  ).then(() => {
-    res.status(200).json({
-        message : "Reservation enregistré avec succès"
-    });
-  }).catch( error => next(error) );
+      res.status(200).json({ message : "Reservation enregistré avec succès" });
+    } else () => { throw new Error("Echèc de l'enrégistrement de la réservation") };
+  } catch( error ){
+    next(error)
+  };
 }
 
  //URL: api/reservation/:id          Remplacer :id par l'id de la reservation
@@ -57,13 +55,11 @@ export function createReservation(req: Request, res: Response, next: NextFunctio
   // }
 
   //Fonction de suppression
-  export function   deleteReservation(req: Request, res: Response, next: NextFunction) {
-    console.log('Delete')
-    Reservation.deleteOne({_id: req.params.id}).then(
-      () => {
-        res.status(200).json({
-          message: 'Supprimer!'
-        });
-      }
-    ).catch( error => next(error) );
+  export async function deleteReservation(req: Request, res: Response, next: NextFunction) {
+    try {
+      Reservation.deleteOne({_id: req.params.id});
+      res.status(200).json({ message: 'Supprimer!' });
+    } catch( error ){
+      next(error);
+    };
   }

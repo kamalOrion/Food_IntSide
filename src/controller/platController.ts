@@ -8,12 +8,13 @@ import { CustomError } from '../validation/customError.js'
 //TYPE: GET
 //REPONSE: json contenant tous les plats de ma categorie
 
-export function getAllPlatBycategorie(req: Request, res: Response, next: NextFunction) {
-    Plat.find({ categorie_id: req.params.id }).then(
-      (plats) => {
-        res.status(200).json(plats);
-      }
-    ).catch( error => next(error) );
+export async function getAllPlatBycategorie(req: Request, res: Response, next: NextFunction) {
+  try {
+    const plats = await Plat.find({ categorie_id: req.params.id })
+    res.status(200).json(plats);
+  } catch( error ){
+    next(error);
+  }
 }
 
 //URL: api/plat
@@ -28,10 +29,9 @@ export function getAllPlatBycategorie(req: Request, res: Response, next: NextFun
 //REPONSE: { "message": "Objet enregistré !" }
 
 //Fonction de creation
-export function createPlat(req: RequestContract, res: Response, next: NextFunction) {
+export async function createPlat(req: RequestContract, res: Response, next: NextFunction) {
   const result = validationResult(req);  
   if (!result.isEmpty()) next( new CustomError(result.array()) );
-  console.log(req.body)
   const plat = new Plat({
     categorie_id: req.body.categorie_id,
     nom: req.body.nom,
@@ -41,9 +41,12 @@ export function createPlat(req: RequestContract, res: Response, next: NextFuncti
     imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
   });
 
-  plat.save()
-  .then(() => { res.status(201).json({message: 'Objet enregistré !'})})
-  .catch( error => next(error) )
+  try {
+    await plat.save()
+    res.status(201).json({message: 'Objet enregistré !'})
+  } catch( error ){
+    next(error)
+  }
 }
 
 //URL: api/plat/one/:id
@@ -51,15 +54,13 @@ export function createPlat(req: RequestContract, res: Response, next: NextFuncti
 //REPONSE: Json contenant le plat dont l'id est passé en parametres
 
 //Fonction de recupération d'un element unique
-export function getOnePlat(req: Request, res: Response, next: NextFunction) {
-  console.log('getting plat')
-    Plat.findOne({
-        _id: req.params.id
-      }).then(
-        (plat) => {
-          res.status(200).json(plat);
-        }
-      ).catch( error => next(error) );
+export async function getOnePlat(req: Request, res: Response, next: NextFunction) {
+    try {
+      const plat = await Plat.findOne({ _id: req.params.id });
+      res.status(200).json(plat);
+    } catch( error ){
+      next(error) 
+    };
 }
 
 //URL: api/plat/:id      Remplacer :id par l'id du plats
@@ -74,26 +75,25 @@ export function getOnePlat(req: Request, res: Response, next: NextFunction) {
 //REPONSE: { "message": "Objet modifié !" }
 
 //Fonction d'édition
-export function editPlat(req: RequestContract, res: Response, next: NextFunction) {
+export async function editPlat(req: RequestContract, res: Response, next: NextFunction) {
   const result = validationResult(req);  
   if (!result.isEmpty()) next( new CustomError(result.array()) );
-  console.log("Edit")
   const platObject = req.file ? {
       ...JSON.parse(req.body.plat),
       imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
   } : { ...req.body };
 
-  Plat.findOne({_id: req.params.id})
-      .then((plat) => {
-          if (plat.userId != req.auth.userId) {
-              next(new Error('Non autorisé!'))
-          } else {
-              Plat.updateOne({ _id: req.params.id}, { ...platObject, _id: req.params.id})
-              .then(() => res.status(200).json({message : 'Objet modifié!'}))
-              .catch( error => next(error) );
-          }
-      })
-      .catch( error => next(error) );
+  try {
+    const plat = await Plat.findOne({_id: req.params.id})
+      if (plat && plat.userId != req.auth.userId) {
+        next(new Error('Non autorisé!'))
+    } else {
+        await Plat.updateOne({ _id: req.params.id}, { ...platObject, _id: req.params.id});
+        res.status(200).json({message : 'Objet modifié!'})
+    }
+  } catch( error ){
+    next(error) 
+  };
 }
 
 //URL: api/plat/:id
@@ -101,12 +101,13 @@ export function editPlat(req: RequestContract, res: Response, next: NextFunction
 //REPONSE: { "message": "Supprimer" }
 
   //Fonction de suppression
-  export function deletePlat(req: Request, res: Response, next: NextFunction) {
-    Plat.deleteOne({_id: req.params.id}).then(
-      () => {
-        res.status(200).json({
-          message: 'Supprimer !'
-        });
-      }
-    ).catch( error => next(error) );
+  export async function deletePlat(req: Request, res: Response, next: NextFunction) {
+    try {
+      await Plat.deleteOne({_id: req.params.id});
+      res.status(200).json({
+        message: 'Supprimer !'
+      });
+    } catch( error ){
+      next(error) 
+    };
   }
