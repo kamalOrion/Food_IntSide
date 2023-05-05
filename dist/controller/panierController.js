@@ -43,7 +43,7 @@ function getClientPanier(req, res, next) {
                 res.status(200).json(data);
             }
             else
-                () => { throw new Error("Echèc de la récupération du panier"); };
+                next(new Error("Echèc de la récupération du panier"));
         }
         catch (error) {
             next(error);
@@ -91,9 +91,7 @@ function deleteOnPlatPanier(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             yield panierModel_js_1.default.deleteOne({ _id: req.params.id });
-            res.status(200).json({
-                message: 'Supprimer !'
-            });
+            res.status(200).json({ message: 'Supprimer !' });
         }
         catch (error) {
             next(error);

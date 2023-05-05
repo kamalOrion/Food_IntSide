@@ -69,7 +69,7 @@ function getOneCategorie(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const categorie = yield categorieModel_js_1.default.findOne({ _id: req.params.id });
-            categorie ? res.status(200).json(categorieModel_js_1.default) : () => { throw new Error('Echec de la recupération de la categorie'); };
+            categorie ? res.status(200).json(categorieModel_js_1.default) : next(new Error('Echec de la recupération de la categorie'));
         }
         catch (error) {
             next(error);
@@ -96,7 +96,7 @@ function editCategorie(req, res, next) {
             const categorieObject = req.file ? Object.assign(Object.assign({}, JSON.parse(req.body.categorie)), { imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}` }) : Object.assign({}, req.body);
             const categorie = yield categorieModel_js_1.default.findOne({ _id: req.params.id });
             if (categorie && (categorie.userId != req.auth.userId)) {
-                throw new Error('Non autorisé');
+                next(new Error('Non autorisé'));
             }
             else {
                 yield categorieModel_js_1.default.updateOne({ _id: req.params.id }, Object.assign(Object.assign({}, categorieObject), { _id: req.params.id }));

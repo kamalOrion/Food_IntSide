@@ -42,7 +42,7 @@ function signup(req, res, next) {
                 res.status(201).json({ message: 'Utilisateur créé !' });
             }
             else
-                () => { throw new Error("Echèc de la création de l'utilisateur"); };
+                next(new Error("Echèc de la création de l'utilisateur"));
         }
         catch (error) {
             next(error);
@@ -75,10 +75,10 @@ function login(req, res, next) {
                     userId: user._id,
                     role: user.role,
                     token: jsonwebtoken_1.default.sign({ userId: user._id }, 'RANDOM_TOKEN_SECRET', { expiresIn: '24h' })
-                }) : () => { throw new Error('Mot de passe incorrect !'); };
+                }) : next(new Error('Mot de passe incorrect !'));
             }
             else
-                () => { throw new Error('Utilisateur inexistant !'); };
+                next(new Error('Utilisateur inexistant !'));
         }
         catch (error) {
             next(error);

@@ -28,7 +28,7 @@ export async function getClientPanier(req: Request, res: Response, next: NextFun
       data.infoPanier = infoPanier;
       data.panier = paniers;
       res.status(200).json(data);
-    } else () => { throw new Error("Echèc de la récupération du panier") };
+    } else next(new Error("Echèc de la récupération du panier"));
   } catch( error ){
     next(error)
   };
@@ -70,9 +70,7 @@ export async function addtoPanier(req: Request, res: Response, next: NextFunctio
 export async function deleteOnPlatPanier(req: Request, res: Response, next: NextFunction) {
   try{
     await Panier.deleteOne({_id: req.params.id});
-    res.status(200).json({
-      message: 'Supprimer !'
-    });
+    res.status(200).json({  message: 'Supprimer !' });
   } catch( error ){
     next(error)
   };

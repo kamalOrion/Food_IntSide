@@ -26,7 +26,7 @@ export async function signup(req: Request, res: Response, next: NextFunction) {
         });
         user.save();
         res.status(201).json({ message: 'Utilisateur créé !' })
-      } else () => { throw new Error("Echèc de la création de l'utilisateur") };
+      } else next(new Error("Echèc de la création de l'utilisateur"));
     } catch( error ){
       next(error)
     };
@@ -59,9 +59,9 @@ export async function signup(req: Request, res: Response, next: NextFunction) {
               'RANDOM_TOKEN_SECRET',
               { expiresIn: '24h' }
           )
-        }) : () => { throw new Error('Mot de passe incorrect !') };
-      } else () => { throw new Error('Utilisateur inexistant !') };
+        }) : next(new Error('Mot de passe incorrect !'));
+      } else next(new Error('Utilisateur inexistant !'));
     } catch( error ){ 
       next(error)
     };
- }
+  }

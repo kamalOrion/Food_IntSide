@@ -10,7 +10,7 @@ import { CustomError } from '../validation/customError.js'
 export async function getAllReservation(req: Request, res: Response, next: NextFunction) {
   try {
     const reservations = await Reservation.find();
-    reservations ? res.status(200).json(reservations) : () => { throw new Error('Echèc de la récupération des reservations') };
+    reservations ? res.status(200).json(reservations) : next(new Error('Echèc de la récupération des reservations'));
   } catch( error ){
     next(error) 
   };
@@ -42,7 +42,7 @@ export async function createReservation(req: Request, res: Response, next: NextF
       });  
       reservation.save();
       res.status(200).json({ message : "Reservation enregistré avec succès" });
-    } else () => { throw new Error("Echèc de l'enrégistrement de la réservation") };
+    } else next(new Error("Echèc de l'enrégistrement de la réservation"));
   } catch( error ){
     next(error)
   };

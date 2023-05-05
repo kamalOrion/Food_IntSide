@@ -52,7 +52,7 @@ export async function createCategorie(req: RequestContract, res: Response, next:
 export async function getOneCategorie(req: RequestContract, res: Response, next: NextFunction) {
     try {
       const categorie = await Categorie.findOne({ _id: req.params.id });
-      categorie ? res.status(200).json(Categorie) : () => { throw new Error('Echec de la recupération de la categorie') };
+      categorie ? res.status(200).json(Categorie) : next(new Error('Echec de la recupération de la categorie'));
     } catch( error) {
       next(error)
     };
@@ -79,7 +79,7 @@ export async function getOneCategorie(req: RequestContract, res: Response, next:
 
       const categorie = await Categorie.findOne({_id: req.params.id});
       if (categorie && (categorie.userId !=  req.auth.userId)) {
-        throw new Error('Non autorisé');
+        next(new Error('Non autorisé'));
       } else {
         await Categorie.updateOne({ _id: req.params.id}, { ...categorieObject, _id: req.params.id})
         res.status(200).json({message : 'Objet modifié!'})

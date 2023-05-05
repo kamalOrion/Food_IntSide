@@ -23,7 +23,7 @@ function getAllReservation(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const reservations = yield reservationModel_js_1.default.find();
-            reservations ? res.status(200).json(reservations) : () => { throw new Error('Echèc de la récupération des reservations'); };
+            reservations ? res.status(200).json(reservations) : next(new Error('Echèc de la récupération des reservations'));
         }
         catch (error) {
             next(error);
@@ -60,7 +60,7 @@ function createReservation(req, res, next) {
                 res.status(200).json({ message: "Reservation enregistré avec succès" });
             }
             else
-                () => { throw new Error("Echèc de l'enrégistrement de la réservation"); };
+                next(new Error("Echèc de l'enrégistrement de la réservation"));
         }
         catch (error) {
             next(error);
