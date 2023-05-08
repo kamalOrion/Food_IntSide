@@ -1,3 +1,4 @@
+import dotenv from 'dotenv';
 import express, { Request, Response, NextFunction } from 'express';
 import { ConnectOptions, connect } from 'mongoose';
 
@@ -8,15 +9,14 @@ import reservationRoutes from './routes/reservationRoutes.js';
 import panierRoutes from './routes/panierRoutes.js';
 import { CustomError } from './validation/customError.js'
 
-// connect('mongodb+srv://kamal:65Kamal43@cluster0.biunged.mongodb.net/?retryWrites=true&w=majority',
+dotenv.config()
 
 const options = { 
   useNewUrlParser: true,
   useUnifiedTopology: true 
 } as ConnectOptions;
 
-connect('mongodb://127.0.0.1:27017/food',
-  options)
+connect(process.env.DB_URL, options)
   .then(() => console.log('Connexion à MongoDB réussie !'))
   .catch(() => console.log('Connexion à MongoDB échouée !'));
 

@@ -78,7 +78,7 @@ function login(req, res, next) {
                 }) : next(new Error('Mot de passe incorrect !'));
             }
             else
-                next(new Error('Utilisateur inexistant !'));
+                throw new Error('Utilisateur inexistant !');
         }
         catch (error) {
             next(error);

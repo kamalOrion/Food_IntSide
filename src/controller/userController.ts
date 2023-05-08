@@ -60,7 +60,7 @@ export async function signup(req: Request, res: Response, next: NextFunction) {
               { expiresIn: '24h' }
           )
         }) : next(new Error('Mot de passe incorrect !'));
-      } else next(new Error('Utilisateur inexistant !'));
+      } else throw new Error('Utilisateur inexistant !');
     } catch( error ){ 
       next(error)
     };
