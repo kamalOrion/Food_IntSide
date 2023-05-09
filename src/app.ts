@@ -36,9 +36,16 @@ app.use('/api/plat', platRoutes);
 app.use('/api/panier', panierRoutes);
 app.use('/api/reservation', reservationRoutes);
 
+app.use((req, res, next) => {
+  const error = new Error(`La route '${req.url}' est introuvable`);
+  next(error);
+});
+
 app.use((err: CustomError, req: Request, res: Response, next: NextFunction) => {
   console.log(err.stack);
   res.status(500).json(err.data ? err.data : err.message);
 });
+
+
 
 export default app;
